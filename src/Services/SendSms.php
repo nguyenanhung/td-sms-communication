@@ -19,6 +19,7 @@ use nguyenanhung\VnTelcoPhoneNumber\Phone_number;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Repository\DataRepository;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Interfaces\ProjectDbInterface;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Interfaces\ProjectInterface;
+use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Services\Interfaces\SendSmsInterface;
 
 /**
  * Class SendSms
@@ -27,7 +28,7 @@ use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Interfaces\ProjectInt
  * @author    713uk13m <dev@nguyenanhung.com>
  * @copyright 713uk13m <dev@nguyenanhung.com>
  */
-class SendSms implements ProjectInterface, ProjectDbInterface
+class SendSms implements ProjectInterface, ProjectDbInterface, SendSmsInterface
 {
     /** @var object \nguyenanhung\MyDebug\Benchmark */
     private $benchmark;
