@@ -7,29 +7,17 @@
  * Time: 22:34
  */
 return [
-    'DATABASE'               => [
-        'driver'    => 'mysql',
-        'host'      => '127.0.0.1',
-        'port'      => 3306,
-        'database'  => 'sms_tools',
-        'username'  => 'root',
-        'password'  => '',
-        'charset'   => 'utf8',
-        'collation' => 'utf8_unicode_ci',
-        'prefix'    => '',
+    'CONFIG_SERVICES'         => [
+        // DATABASE sẽ lấy config từ bảng short_code, FILE = lấy config từ files
+        'config_method'   => 'DATABASE',
+        'send_sms_method' => 'SmsGatewayVinaVasCloud',
     ],
-    'DATABASE_LOG'           => [
-        'driver'    => 'mysql',
-        'host'      => '127.0.0.1',
-        'port'      => 3306,
-        'database'  => 'sms_logs',
-        'username'  => 'root',
-        'password'  => '',
-        'charset'   => 'utf8',
-        'collation' => 'utf8_unicode_ci',
-        'prefix'    => '',
+    'CONFIG_PUSH_SMS'         => [
+        'start_push_time' => '',
+        'end_push_time'   => '',
     ],
-    '_SMS_GATEWAY_SERVICES_' => [
+    'CONFIG_DATABASE_STORAGE' => [],
+    '_SMS_GATEWAY_SERVICES_'  => [
         'WebService'             => [
             'url'           => 'xxx',
             'method'        => 'xxx',
@@ -220,5 +208,27 @@ return [
                 400   => 'Server bận'
             ],
         ],
-    ]
+    ],
+    'DATABASE'                => [
+        'driver'    => 'mysql',
+        'host'      => '127.0.0.1',
+        'port'      => 3306,
+        'database'  => 'sms_tools',
+        'username'  => 'root',
+        'password'  => '',
+        'charset'   => 'utf8',
+        'collation' => 'utf8_unicode_ci',
+        'prefix'    => '',
+    ],
+    'DATABASE_LOG'            => [
+        'driver'    => 'mysql',
+        'host'      => '127.0.0.1',
+        'port'      => 3306,
+        'database'  => 'sms_logs',
+        'username'  => 'root',
+        'password'  => '',
+        'charset'   => 'utf8',
+        'collation' => 'utf8_unicode_ci',
+        'prefix'    => '',
+    ],
 ];

@@ -15,20 +15,21 @@ use nguyenanhung\MyDebug\Benchmark;
 use nguyenanhung\MyDebug\Debug;
 use nguyenanhung\MyRequests\MyRequests;
 use nguyenanhung\MyRequests\SoapRequest;
+use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Helper\Utils;
 use nguyenanhung\VnTelcoPhoneNumber\Phone_number;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Repository\DataRepository;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Interfaces\ProjectDbInterface;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Interfaces\ProjectInterface;
-use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Services\Interfaces\SendSmsInterface;
+use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Services\Interfaces\SmsSendingInterface;
 
 /**
- * Class SendSms
+ * Class SmsSending
  *
  * @package   nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Services
  * @author    713uk13m <dev@nguyenanhung.com>
  * @copyright 713uk13m <dev@nguyenanhung.com>
  */
-class SendSms implements ProjectInterface, ProjectDbInterface, SendSmsInterface
+class SendSms implements ProjectInterface, ProjectDbInterface, SmsSendingInterface
 {
     /** @var object \nguyenanhung\MyDebug\Benchmark */
     private $benchmark;
@@ -48,6 +49,12 @@ class SendSms implements ProjectInterface, ProjectDbInterface, SendSmsInterface
     private $sdkConfig;
     /** @var array|null */
     private $options;
+    /** @var bool */
+    private $responseIsObject;
+    /** @var null|array */
+    private $inputData;
+    /** @var null|array|object */
+    private $smsSendingResult;
 
     /**
      * SendSms constructor.
@@ -148,6 +155,21 @@ class SendSms implements ProjectInterface, ProjectDbInterface, SendSmsInterface
 
     /******************************* CONFIG *******************************/
     /**
+     * Function setResponseIsObject
+     *
+     * @author: 713uk13m <dev@nguyenanhung.com>
+     * @time  : 11/22/18 00:22
+     *
+     * @return $this
+     */
+    public function setResponseIsObject()
+    {
+        $this->responseIsObject = TRUE;
+
+        return $this;
+    }
+
+    /**
      * Function setSdkConfig
      *
      * @author: 713uk13m <dev@nguyenanhung.com>
@@ -194,5 +216,70 @@ class SendSms implements ProjectInterface, ProjectDbInterface, SendSmsInterface
         return $configData;
     }
 
+    /******************************* INPUT DATA & RESULT *******************************/
+    /**
+     * Function setInputData
+     *
+     * @author: 713uk13m <dev@nguyenanhung.com>
+     * @time  : 11/22/18 00:08
+     *
+     * @param array $inputData
+     *
+     * @return $this
+     */
+    public function setInputData($inputData = [])
+    {
+        $this->inputData = $inputData;
+        $this->debug->debug(__FUNCTION__, 'Input Data => ' . json_encode($this->inputData));
+
+        return $this;
+    }
+
+    /**
+     * Function getInputData
+     *
+     * @author: 713uk13m <dev@nguyenanhung.com>
+     * @time  : 11/22/18 00:08
+     *
+     * @return mixed
+     */
+    public function getInputData()
+    {
+        return $this->inputData;
+    }
+
+    /**
+     * Function getSmsSendingResult
+     *
+     * @author: 713uk13m <dev@nguyenanhung.com>
+     * @time  : 11/22/18 00:10
+     *
+     * @return array|null|object
+     */
+    public function getSmsSendingResult()
+    {
+        return $this->smsSendingResult;
+    }
+
     /******************************* SEND SMS *******************************/
+    /**
+     * Function smsSending
+     *
+     * @author: 713uk13m <dev@nguyenanhung.com>
+     * @time  : 11/22/18 00:23
+     *
+     * @return $this
+     */
+    public function smsSending()
+    {
+        $this->debug->debug(__FUNCTION__, 'Input Data => ' . json_encode($this->inputData));
+        $result = [];
+        if ($this->responseIsObject) {
+            $result = Utils::arrayToObject($result);
+        }
+        $this->smsSendingResult = $result;
+        $this->debug->info(__FUNCTION__, 'SMS Sending Result => ' . json_encode($this->smsSendingResult));
+
+        return $this;
+    }
 }
