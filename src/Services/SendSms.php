@@ -4,30 +4,30 @@
  * Created by PhpStorm.
  * User: 713uk13m <dev@nguyenanhung.com>
  * Date: 11/21/18
- * Time: 22:18
+ * Time: 22:51
  */
 
-namespace nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Database;
+namespace nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Services;
 
 use nguyenanhung\MantisBT\MantisConnector;
 use nguyenanhung\MyCache\Cache;
-use nguyenanhung\MyDatabase\Model\BaseModel;
 use nguyenanhung\MyDebug\Benchmark;
 use nguyenanhung\MyDebug\Debug;
+use nguyenanhung\MyRequests\MyRequests;
+use nguyenanhung\MyRequests\SoapRequest;
 use nguyenanhung\VnTelcoPhoneNumber\Phone_number;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Repository\DataRepository;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Interfaces\ProjectDbInterface;
 use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Interfaces\ProjectInterface;
-use nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Database\Interfaces\SmsDatabaseInterface;
 
 /**
- * Class SmsDatabase
+ * Class SendSms
  *
- * @package   nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Database
+ * @package   nguyenanhung\ThuDoMultimediaSMS\Tools\CommunicationSMS\Services
  * @author    713uk13m <dev@nguyenanhung.com>
  * @copyright 713uk13m <dev@nguyenanhung.com>
  */
-class SmsDatabase implements ProjectInterface, ProjectDbInterface, SmsDatabaseInterface
+class SendSms implements ProjectInterface, ProjectDbInterface
 {
     /** @var object \nguyenanhung\MyDebug\Benchmark */
     private $benchmark;
@@ -37,6 +37,10 @@ class SmsDatabase implements ProjectInterface, ProjectDbInterface, SmsDatabaseIn
     private $cache;
     /** @var object \nguyenanhung\VnTelcoPhoneNumber\Phone_number */
     private $phoneNumber;
+    /** @var object \nguyenanhung\MyRequests\MyRequests */
+    private $requests;
+    /** @var object \nguyenanhung\MyRequests\SoapRequest */
+    private $soapRequests;
     /** @var object \nguyenanhung\MantisBT\MantisConnector */
     private $mantis;
     /** @var null|array */
@@ -45,7 +49,7 @@ class SmsDatabase implements ProjectInterface, ProjectDbInterface, SmsDatabaseIn
     private $options;
 
     /**
-     * SmsDatabase constructor.
+     * SendSms constructor.
      *
      * @param array $options
      */
@@ -55,25 +59,37 @@ class SmsDatabase implements ProjectInterface, ProjectDbInterface, SmsDatabaseIn
             $this->benchmark = new Benchmark();
             $this->benchmark->mark('code_start');
         }
-        $this->debug       = new Debug();
-        $this->phoneNumber = new Phone_number();
-        $this->cache       = new Cache();
+        $this->debug        = new Debug();
+        $this->phoneNumber  = new Phone_number();
+        $this->cache        = new Cache();
+        $this->requests     = new MyRequests();
+        $this->soapRequests = new SoapRequest();
         if (isset($options['debugStatus']) && $options['debugStatus'] === TRUE) {
             $this->debug->setDebugStatus(TRUE);
             $this->phoneNumber->setDebugStatus(TRUE);
             $this->cache->setDebugStatus(TRUE);
+            $this->requests->debugStatus     = TRUE;
+            $this->soapRequests->debugStatus = TRUE;
             if (isset($options['debugLevel']) && !empty($options['debugLevel'])) {
                 $this->debug->setGlobalLoggerLevel($options['debugLevel']);
                 $this->phoneNumber->setDebugLevel($options['debugLevel']);
                 $this->cache->setDebugLevel($options['debugLevel']);
+                $this->requests->debugLevel     = $options['debugLevel'];
+                $this->soapRequests->debugLevel = $options['debugLevel'];
             }
             if (isset($options['loggerPath']) && !empty($options['loggerPath'])) {
                 $this->debug->setLoggerPath($options['loggerPath']);
                 $this->phoneNumber->setLoggerPath($options['loggerPath']);
                 $this->cache->setDebugLoggerPath($options['loggerPath']);
+                $this->requests->debugLoggerPath     = $options['loggerPath'];
+                $this->soapRequests->debugLoggerPath = $options['loggerPath'];
             }
             $this->debug->setLoggerSubPath(__CLASS__);
             $this->debug->setLoggerFilename('Log-' . date('Y-m-d') . '.log');
+            $this->requests->debugLoggerFilename     = 'Log-' . date('Y-m-d') . '.log';
+            $this->soapRequests->debugLoggerFilename = 'Log-' . date('Y-m-d') . '.log';
+            $this->requests->__construct();
+            $this->soapRequests->__construct();
             $this->phoneNumber->__construct();
         }
         if (isset($options['cachePath'])) {
@@ -100,11 +116,11 @@ class SmsDatabase implements ProjectInterface, ProjectDbInterface, SmsDatabaseIn
         $this->mantis->setProjectId($options['monitorProjectId']);
         $this->mantis->setUsername($options['monitorUsername']);
         $this->mantis->__construct();
-        $this->debug->debug(__FUNCTION__, '/-------------------------> Begin Logger - SMS Database - Version: ' . self::VERSION . ' - Last Modified: ' . self::LAST_MODIFIED . ' <-------------------------\\');
+        $this->debug->debug(__FUNCTION__, '/-------------------------> Begin Logger - Send SMS - Version: ' . self::VERSION . ' - Last Modified: ' . self::LAST_MODIFIED . ' <-------------------------\\');
     }
 
     /**
-     * SmsDatabase destructor.
+     * SendSms destructor.
      */
     public function __destruct()
     {
@@ -113,7 +129,7 @@ class SmsDatabase implements ProjectInterface, ProjectDbInterface, SmsDatabaseIn
             $this->debug->debug(__FUNCTION__, 'Elapsed Time: ===> ' . $this->benchmark->elapsed_time('code_start', 'code_end'));
             $this->debug->debug(__FUNCTION__, 'Memory Usage: ===> ' . $this->benchmark->memory_usage());
         }
-        $this->debug->debug(__FUNCTION__, '/-------------------------> End Logger - SMS Database - Version: ' . self::VERSION . ' - Last Modified: ' . self::LAST_MODIFIED . ' <-------------------------\\');
+        $this->debug->debug(__FUNCTION__, '/-------------------------> End Logger - Send SMS - Version: ' . self::VERSION . ' - Last Modified: ' . self::LAST_MODIFIED . ' <-------------------------\\');
     }
 
     /**
@@ -177,65 +193,5 @@ class SmsDatabase implements ProjectInterface, ProjectDbInterface, SmsDatabaseIn
         return $configData;
     }
 
-    /******************************* DB METHOD *******************************/
-    /**
-     * Function connectDatabase
-     *
-     * @author: 713uk13m <dev@nguyenanhung.com>
-     * @time  : 11/21/18 22:23
-     *
-     * @param array $database
-     *
-     * @return \nguyenanhung\MyDatabase\Model\BaseModel
-     */
-    public function connectDatabase($database = [])
-    {
-        $model = new BaseModel();
-        if (isset($this->options['debugStatus']) && $this->options['debugStatus'] === TRUE) {
-            $model->debugStatus = $this->options['debugStatus'];
-            if (isset($this->options['debugLevel']) && !empty($this->options['debugLevel'])) {
-                $model->debugLevel = $this->options['debugLevel'];
-            }
-            if (isset($this->options['loggerPath']) && !empty($this->options['loggerPath'])) {
-                $model->debugLoggerPath = $this->options['loggerPath'];
-            }
-            $model->debugLoggerFilename = 'Log-' . date('Y-m-d') . '.log';
-            $model->__construct();
-        }
-        $model->setDatabase($database);
-
-        return $model;
-    }
-
-    /******************************* DB SERVICE *******************************/
-    /**
-     * Function getDataShortCode
-     *
-     * @author: 713uk13m <dev@nguyenanhung.com>
-     * @time  : 11/21/18 22:40
-     *
-     * @param string $whereValue
-     * @param string $whereField
-     *
-     * @return array|bool|\Illuminate\Support\Collection|mixed|null|string
-     */
-    public function getDataShortCode($whereValue = '', $whereField = 'shortcode')
-    {
-        $inputParams = [
-            'whereValue' => $whereValue,
-            'whereField' => $whereField,
-        ];
-        $this->debug->debug(__FUNCTION__, 'Input Params => ' . json_encode($inputParams));
-        $cacheKey = self::PROJECT_CACHE_KEY . self::CLASS_CACHE_KEY . __FUNCTION__ . hash('md5', json_encode($whereValue) . json_encode($whereField));
-        if ($this->cache->has($cacheKey)) {
-            $result = $this->cache->get($cacheKey);
-        } else {
-            $database = $this->connectDatabase($this->sdkConfig[self::_DATABASE_CONFIG_KEY_]);
-            $result   = $database->setTable(self::TABLE_SHORT_CODE)->getInfo($whereValue, $whereField);
-            $this->cache->save($cacheKey, $result);
-        }
-        $this->debug->debug(__FUNCTION__, 'Result Data => ' . json_encode($result));
-
-        return $result;
-    }
+    /******************************* SEND SMS *******************************/
 }
