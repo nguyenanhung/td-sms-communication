@@ -22,11 +22,11 @@
         "ext-json": "*",
         "nguyenanhung/my-debug": "^0.1",
         "nguyenanhung/my-cache": "^0.1",
-        "nguyenanhung/requests": "^0.1",
+        "nguyenanhung/requests": "^1.0",
         "nguyenanhung/vn-telco-phonenumber": "^1.1",
         "nguyenanhung/database": "^0.1",
         "nguyenanhung/mantis-connector": "^1.0",
-        "nguyenanhung/30-seconds-of-php-code": "^1.0"
+        "nguyenanhung/helpers": "^1.0"
     },
     "require-dev": {
         "kint-php/kint": "^3.0"
